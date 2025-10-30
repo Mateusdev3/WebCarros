@@ -14,6 +14,8 @@ import { signOut } from 'firebase/auth'
 import { useContext } from 'react'
 import { AuthContext } from '../../contexts/authContext'
 
+
+
 const shema = z.object({
     name: z.string().nonempty("O campo nome é obrigatório"),
     email: z.string().email("Insira um e-mail valido").nonempty("O campo e-mail é obrigatório"),
@@ -32,7 +34,6 @@ export function Register(){
     mode: "onChange"
 
 })  
-
       useEffect(() => {
     
             signOut(auth)

@@ -5,6 +5,16 @@ import { useForm } from "react-hook-form"
 import { Input } from "../../../components/input"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { storage} from "../../../services/firebaseConnection"
+import { database } from "../../../services/firebaseConnection"
+import { addDoc, collection } from "firebase/firestore"
+import { deleteObject, getDownloadURL, ref, uploadBytes } from 'firebase/storage'
+import { useState, useContext } from 'react'
+import type { ChangeEvent } from "react"
+import { AuthContext } from "../../../contexts/authContext"
+import { v4 as uuidV4 } from "uuid"
+import { BsFillTrash3Fill } from "react-icons/bs"
+
 
 
 const shema = z.object({
@@ -22,29 +32,134 @@ const shema = z.object({
 
 type FormData = z.infer<typeof shema>;
 
-export function New() {
+interface ImageProps{
+    uid: string
+    name: string
+    downloadUrl: string
+    previewUrl: string 
+    
+}
 
-    const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+export function New() {
+    const [images, setImages] = useState<ImageProps[]>([])
+    const { user } = useContext(AuthContext)
+    const { register, handleSubmit, formState: { errors }, reset } = useForm<FormData>({
         resolver: zodResolver(shema),
         mode: "onChange"
     })
+    function handleSendForm(data: FormData) {
 
-    function handleSendForm(data: FormData){
-        console.log(data)
+        if(images.length === 0){
+            alert("Nenhuma imagem selecionada para o veiculo.")
+            return
+        }
+
+        const carlistimages = images.map(car => {
+            return{
+                uid: car.uid,
+                name: car.name,
+                url: car.downloadUrl
+            }
+        })
+
+        addDoc(collection(database, "cars"), {
+            name: data.name,
+            model: data.model,
+            year: data.year,
+            km: data.km,
+            tel: data.whatsapp,
+            city: data.city,
+            price: data.price,
+            description: data.description,
+            uid: user?.id,
+            username: user?.name,
+            created: new Date(),
+            images: carlistimages
+        })
+        .then(() => {
+            reset();
+            setImages([])
+            console.log("Dados cadastrados com sucesso")
+        })
+        .catch((err) => {
+            console.log(err)
+        })
+       
+    }
+    async function handleFile(e: ChangeEvent<HTMLInputElement>) {
+        if (e.target.files && e.target.files[0]) {
+            const image = e.target.files[0]
+
+            if (image.type === 'image/jpeg' || image.type === 'image/png') {
+                  console.log("passoui aqui")
+                await handleUpload(image)
+            }
+        } else {
+            alert("Insira uma imagem com formato valido")
+            return
+        }
+    }
+    function handleUpload(image: File) {
+
+        if (!user?.id) {
+            return
+        }
+        const userid = user?.id
+        const imageid = uuidV4()
+        const uploadref = ref(storage, `images/${userid}/${imageid}`)
+
+        uploadBytes(uploadref, image)
+            .then((snapshot) => {
+                getDownloadURL(snapshot.ref).then((downloadurl) => {
+                    const imageItem  = {
+                        name: imageid,
+                        uid: userid,
+                        previewUrl: URL.createObjectURL(image),
+                        downloadUrl: downloadurl
+                    }
+                    setImages((images) => [...images, imageItem])
+                })
+            })
     }
 
+    async function handleDelete(item: ImageProps){
+       
+
+        const imagepath = `images/${item.uid}/${item.name}`
+        const imageref = ref(storage, imagepath)
+        try{
+              await deleteObject(imageref)
+               setImages(images.filter((car) => car.downloadUrl !== item.downloadUrl))
+        }
+        catch(err){
+            console.log(err)
+        }
+    }
     return (
         <Container>
             <PanelHeader />
-            <div className="bg-white w-full p-4 rounded-lg flex items-center shadow-md">
-                <button className="border-2 rounded-lg p-4 px-15 md:w-50 md:h-30 flex items-center justify-center md:flex-row w-30 h-20">
+            <div className="bg-white w-full p-4 rounded-lg flex items-center shadow-md gap-4">
+                <button className="border-2 rounded-lg p-4 px-15 md:w-50 md:h-40 flex items-center justify-center md:flex-row w-30 h-20">
                     <div className="absolute z-0">
                         <BiUpload size={70} />
                     </div>
                     <div className="flex items-center z-1 ">
-                        <input className="cursor-pointer h-30 opacity-0 bg-red-600 mr-30 " type="file" accept="image/*" />
+                        <input
+                            className="cursor-pointer h-30 opacity-0 bg-red-600 mr-30 "
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFile} />
                     </div>
                 </button>
+                {images.map(item => (
+                    <div key={item.uid} className="w-full h-40 flex items-center justify-center relative">
+                    <img src={item.previewUrl} alt="Imagem Carro" className="w-full h-full object-cover object-center
+                    rounded-lg shadow-md shadow-gray-500" />
+                    <div className="absolute flex full h-full items-center justify-center ">
+                    <button onClick={() => handleDelete(item)}><BsFillTrash3Fill size={50} color="white"  className="opacity-0 hover:opacity-100 cursor-pointer "/></button>
+                    </div>
+                    </div>
+                ))}
             </div>
             <div className="flex flex-col bg-white mt-2 w-full p-2 rounded-lg shadow-md">
                 <form className="flex flex-col gap-2" onSubmit={handleSubmit(handleSendForm)}>
@@ -119,7 +234,7 @@ export function New() {
                             />
                         </div>
                     </div>
-                       <div>
+                    <div>
                         <p className="font-medium">Preço</p>
                         <Input
                             type="text"
@@ -135,12 +250,12 @@ export function New() {
                         name="description"
                         id="description"
                         placeholder="Insira a descrição do veiculo" >
-                       
+
                     </textarea>
-                     {errors.description && <p className="text-red-500 text-xs">{errors.description.message}</p>}
+                    {errors.description && <p className="text-red-500 text-xs">{errors.description.message}</p>}
 
                     <button type="submit"
-                     className="bg-red-500 text-white font-medium rounded-lg h-10 text-lg shadow-md cursor-pointer">Cadastrar</button>
+                        className="bg-red-500 text-white font-medium rounded-lg h-10 text-lg shadow-md cursor-pointer">Cadastrar</button>
 
                 </form>
             </div>

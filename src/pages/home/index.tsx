@@ -1,6 +1,76 @@
 import { Container } from "../../components/container";
+import { useState, useEffect } from "react";
+import { query, collection, getDocs, orderBy } from "firebase/firestore";
+import { database } from "../../services/firebaseConnection";
+import { BiLoaderAlt, BiLoaderCircle } from "react-icons/bi";
 
-export function Home() {
+
+interface CarsProps{
+    id: string
+    name: string;
+    model: string;
+    year:string;
+    km:string;
+    tel: string;
+    city: string;
+    price: string | number;
+    description: string;
+    uid: string;
+    username: string;
+    images: ImageProps[];
+}
+
+interface ImageProps{
+    name: string;
+    uid: string;
+    url: string;
+}
+
+export function Home() {    
+
+
+    const [cars, setCars] = useState<CarsProps[]>([])
+    const [images, setImages] = useState<string[]>([])
+
+
+    useEffect(() => {
+
+        function handleLoadCars(){
+            const carsref = collection(database, "cars")
+            const orderfef = query(carsref, orderBy("created", "desc"))
+
+             getDocs(orderfef)
+            .then((snapshot) => {
+                let listcars = [] as CarsProps[];
+                snapshot.forEach(doc => {
+                    listcars.push({
+                    id: doc.id,
+                    name: doc.data().name,
+                    model: doc.data().model,
+                    year: doc.data().year,
+                    km: doc.data().km,
+                    tel: doc.data().tel,
+                    city: doc.data().city,
+                    price: doc.data().price,
+                    description: doc.data().description,
+                    uid: doc.data().uid,
+                    username: doc.data().username,
+                    images: doc.data().images
+                    })
+                })
+                 setCars(listcars)
+            })
+        }
+
+        handleLoadCars()
+
+    }, [])
+
+    function handleLoading(id : string){
+        setImages((datapreview) => [...datapreview, id])
+       
+    }
+
     return (
         <Container>
 
@@ -15,21 +85,28 @@ export function Home() {
             
             <h1 className="text-center font-medium text-2xl py-8">Carros novos e usados em todo Brasil</h1>
 
-            <main className="grid grid-cols-1 w-full max-w-7xl md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <section className="flex flex-col shadow-md p-2 rounded-lg hover:scale-105 transition-transform ">
+            <main className="grid grid-cols-1 w-full max-w-7xl md:grid-cols-2 lg:grid-cols-3 gap-6 ">
+               {cars !== null && cars.map(cars => (
+                 <section key={cars.id} className="flex flex-col shadow-md p-2 rounded-lg hover:scale-105 transition-transform min-h-12/12 bg-white">
                     <img className="rounded-lg"
-                    src="https://image.webmotors.com.br/_fotos/anunciousados/gigante/2025/202508/20250818/bmw-m3-3.0-i6-twinturbo-gasolina-competition-m-steptronic-wmimagem17163495874.jpg?s=fill&w=552&h=414&q=60" alt="Carroimg" />
-
-                    <strong className="py-2">BMW M3 SPORT</strong>
+                    src={cars.images[0].url} alt="Carroimg"
+                    onLoad={() => handleLoading(cars.id)} />
+                    <div className="bg-red-500 w-full rounded-lg mx-auto min-h-full flex items-center justify-center mb-10"
+                    style={{display: images.includes(cars.id) ? "none" : "flex",     
+                     }}>
+                    <BiLoaderAlt size={80} color="white"  className="animate-spin h-full"/>
+                    </div>
+                    
+                    <strong className="py-2">{cars.name}</strong>
                     <div className="flex flex-col gap-5">
-                        <span className="text-zinc-600">Ano 2023 | 2400 km</span>
-                        <strong>R$ 356.990</strong>
+                        <span className="text-zinc-600">{cars.year} | {cars.km}</span>
+                        <strong>R$ {cars.price}</strong>
                     </div>
                     <div className="bg-gray-300 h-px mt-2 mb-2"> </div>
-                    <span>Belo Horizonte - MG</span>
+                    <span>{cars.city}</span>
                 </section>
+               ))}
             </main>
         </Container>
     )
 }
-
