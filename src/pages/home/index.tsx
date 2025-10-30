@@ -2,7 +2,7 @@ import { Container } from "../../components/container";
 import { useState, useEffect } from "react";
 import { query, collection, getDocs, orderBy } from "firebase/firestore";
 import { database } from "../../services/firebaseConnection";
-import { BiLoaderAlt, BiLoaderCircle } from "react-icons/bi";
+import { BiLoaderAlt } from "react-icons/bi";
 
 
 interface CarsProps{
