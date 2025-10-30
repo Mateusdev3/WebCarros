@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
@@ -19,3 +20,6 @@ const database = getFirestore(app)
 const storage = getStorage(app)
 
 export {auth, database, storage}
+=======
+void 
+>>>>>>> 4c0d3e2bb1cd54bf6405a2fae8fd0569dba42dc7
