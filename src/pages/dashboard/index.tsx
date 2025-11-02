@@ -2,9 +2,11 @@ import { BiTrashAlt } from "react-icons/bi";
 import { Container } from "../../components/container";
 import { PanelHeader } from "../../components/panelheader";
 import { query, collection, where, getDocs, deleteDoc, doc  } from "firebase/firestore";
-import { database } from "../../services/firebaseConnection";
+import { database, storage } from "../../services/firebaseConnection";
 import { useState, useContext, useEffect } from "react";
 import { AuthContext } from "../../contexts/authContext";
+import { deleteObject, ref } from "firebase/storage";
+import { Link } from "react-router-dom";
 
 interface CarsProps{
     id: string
@@ -61,19 +63,29 @@ export function Dashborad(){
         handleGetData()
 }, [user])
 
-    function handleDelete(data: string){
-        const carsRef = doc(database, "cars", data)
+    function handleDelete(data: CarsProps){
+        const carsRef = doc(database, "cars", data.id)
         deleteDoc(carsRef)
+
+        data.images.map(imageid => {
+
+            const path = `images/${imageid.uid}/${imageid.name}`
+            const refImages = ref(storage, path)
+            deleteObject(refImages)
+        })
+
+        setCars(cars.filter((cardata) => cardata.id !== data.id))
     }
     return(
        <Container>
         <PanelHeader/>
            <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {cars.map(data => (
-            <section key={data.id} className="relative bg-white w-full h-full p-2 rounded-lg flex flex-col gap-2 shadow-md transition-transform hover:scale-105">
+            <Link to={`/car/${data.id}`}>
+            <section key={data.id} className="relative bg-white w-full h-full p-2 rounded-lg flex flex-col gap-2 shadow-md transition-transform hover:scale-105 ">
                 <img src={data.images[0].url}
                 className="rounded-lg"/>
-                <button onClick={() => handleDelete(data.id)}>
+                <button onClick={() => handleDelete(data)}>
                 <BiTrashAlt size={50} className="bg-white absolute rounded-full p-2 right-4 top-3 shadow-md hover:scale-105"/>
                 </button>
                 <p className="font-bold">{data.name}</p>
@@ -84,6 +96,7 @@ export function Dashborad(){
                 <div className="h-px bg-gray-300"></div>
                 <p>{data.city}</p>
             </section>
+            </Link>
         ))}
            </main>
         </Container>

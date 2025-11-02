@@ -63,7 +63,7 @@ export function New() {
         })
 
         addDoc(collection(database, "cars"), {
-            name: data.name,
+            name: data.name.toUpperCase(),
             model: data.model,
             year: data.year,
             km: data.km,
@@ -91,7 +91,6 @@ export function New() {
             const image = e.target.files[0]
 
             if (image.type === 'image/jpeg' || image.type === 'image/png') {
-                  console.log("passoui aqui")
                 await handleUpload(image)
             }
         } else {
@@ -116,7 +115,7 @@ export function New() {
                         uid: userid,
                         previewUrl: URL.createObjectURL(image),
                         downloadUrl: downloadurl
-                    }
+                    } 
                     setImages((images) => [...images, imageItem])
                 })
             })
