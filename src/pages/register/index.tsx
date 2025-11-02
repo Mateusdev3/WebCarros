@@ -69,7 +69,7 @@ export function Register(){
                 <Link to='/'>
                 <img src={logo} alt="logowebcarros" className='mb-5 w-80'/>
                 </Link>
-                <form onSubmit={handleSubmit(handleRegister)} className='flex flex-col w-full bg-white px-4 rounded-lg p-2 mb-1'>
+                <form onSubmit={handleSubmit(handleRegister)} className='flex flex-col w-full bg-white px-4 rounded-lg p-2 mb-1 shadow-md'>
 
                     <Input
                     type='text'
