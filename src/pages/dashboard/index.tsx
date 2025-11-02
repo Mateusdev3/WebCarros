@@ -7,6 +7,7 @@ import { useState, useContext, useEffect } from "react";
 import { AuthContext } from "../../contexts/authContext";
 import { deleteObject, ref } from "firebase/storage";
 import { Link } from "react-router-dom";
+import toast from "react-hot-toast";
 
 interface CarsProps{
     id: string
@@ -75,6 +76,7 @@ export function Dashborad(){
         })
 
         setCars(cars.filter((cardata) => cardata.id !== data.id))
+        toast.success("Carro excluido com sucesso.")
     }
     return(
        <Container>

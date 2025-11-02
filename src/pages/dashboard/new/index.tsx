@@ -14,6 +14,7 @@ import type { ChangeEvent } from "react"
 import { AuthContext } from "../../../contexts/authContext"
 import { v4 as uuidV4 } from "uuid"
 import { BsFillTrash3Fill } from "react-icons/bs"
+import toast from "react-hot-toast"
 
 
 
@@ -50,7 +51,7 @@ export function New() {
     function handleSendForm(data: FormData) {
 
         if(images.length === 0){
-            alert("Nenhuma imagem selecionada para o veiculo.")
+          toast.error("Insira ao menos uma imagem!")
             return
         }
 
@@ -79,10 +80,10 @@ export function New() {
         .then(() => {
             reset();
             setImages([])
-            console.log("Dados cadastrados com sucesso")
+           toast.success("Veiculo cadastrado com sucesso!")
         })
-        .catch((err) => {
-            console.log(err)
+        .catch(() => {
+           toast.error("Erro ao cadastrar veiculo")
         })
        
     }
@@ -92,9 +93,10 @@ export function New() {
 
             if (image.type === 'image/jpeg' || image.type === 'image/png') {
                 await handleUpload(image)
+                toast.success("Imagem enviada com sucesso!")
             }
         } else {
-            alert("Insira uma imagem com formato valido")
+            toast.error("Insira uma imagem com formato valido")
             return
         }
     }
@@ -129,6 +131,7 @@ export function New() {
         try{
               await deleteObject(imageref)
                setImages(images.filter((car) => car.downloadUrl !== item.downloadUrl))
+               toast.success("Imagem exluida com sucesso")
         }
         catch(err){
             console.log(err)

@@ -10,6 +10,7 @@ import { signInWithEmailAndPassword } from 'firebase/auth'
 import { useNavigate } from 'react-router-dom'
 import { signOut } from 'firebase/auth'
 import { useEffect } from 'react'
+import toast from 'react-hot-toast'
 
 const shema = z.object({
     email: z.string().email("Insira um e-mail válido").nonempty("O campo e-mail é obrigatório"),
@@ -35,11 +36,11 @@ export function Login() {
     function onSubmit(data: FormData){
        signInWithEmailAndPassword(auth, data.email, data.password)
        .then(() => {
+        toast.success("Logado com sucesso!")
         navigate("/dashboard", {replace: true} )
        })
-       .catch((erro) => {
-        console.log("erro ao logar")
-        console.log(erro)
+       .catch(() => {
+        toast.error("Usuario ou senha incorretos!")
        })
     }
     return (
@@ -49,7 +50,7 @@ export function Login() {
                 <Link to="/" className='max-w-sm flex items-center justify-center  '>
                     <img src={logo} alt="logo" className='w-80 ' />
                 </Link>
-                <form onSubmit={handleSubmit(onSubmit)} className='bg-white mt-4 w-full p-4 rounded-lg flex items-center flex-col h-full mb-1' >
+                <form onSubmit={handleSubmit(onSubmit)} className='bg-white mt-4 w-full p-4 rounded-lg flex items-center flex-col h-full mb-1 shadow-md' >
                    
                     <Input 
                     type='email'

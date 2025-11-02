@@ -13,6 +13,7 @@ import { useEffect } from 'react'
 import { signOut } from 'firebase/auth'
 import { useContext } from 'react'
 import { AuthContext } from '../../contexts/authContext'
+import toast from 'react-hot-toast'
 
 
 
@@ -47,6 +48,7 @@ export function Register(){
         await updateProfile(user.user, {
             displayName: data.name   
         })
+        toast.success("Seja bem vindo ao WebCarros!")
         navigate("/dashboard", {replace: true})
         handleUpdateUser({
             id: user.user.uid,
@@ -55,9 +57,8 @@ export function Register(){
 
         })
       })
-      .catch((error) => {
-        console.log("Erro ao cadastrar")
-        console.log(error)
+      .catch(() => {
+       toast.error("Não foi possivel realizar o cadastro")
       })
 
     }
